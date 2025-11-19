@@ -9,6 +9,11 @@ export class CartPage {
     await this.page.locator(cartPagelocators.continueShoppingButton).click();
   }
 
+  async clickCheckoutButton()
+{
+    await this.page.locator(cartPagelocators.checkoutButton).click();
+}
+
   async getCartPageElements() {
     return {
       cartTile: this.page.locator(cartPagelocators.cartTile),

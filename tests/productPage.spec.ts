@@ -1,88 +1,77 @@
-import { Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { BASE_URL, USERNAME, PASSWORD } from '../utils/envConfig';
+import { ProductPage } from '../pages/ProductPage';
+import { LoginPage } from '../pages/LoginPage';
+import { LoginLocators } from '../locators/LoginLocators';
 import { productPageLocators } from '../locators/ProductPageLocators';
 
-export class ProductPage {
-  constructor(private page: Page) {}
+const productsToCart = [
+  "Sauce Labs Backpack",
+  "Sauce Labs Bolt T-Shirt",
+  "Sauce Labs Onesie"
+];
 
-  async logout() {
-    await this.page.click(productPageLocators.settingIcon);
-    await this.page.click(productPageLocators.logoutLink);
-  }
+test.describe("Product Page Validation", () => {
+  let loginPage: LoginPage;
+  let productPage: ProductPage;
 
-  async openAboutPage() {
-    await this.page.click(productPageLocators.settingIcon);
-    await this.page.click(productPageLocators.aboutLink);
-  }
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    productPage = new ProductPage(page);
 
-  async validateAllProductsDisplayed() {
-    const names = await this.page.locator(productPageLocators.productNames).allTextContents();
-    const descriptions = await this.page.locator(productPageLocators.productDescription).allTextContents();
-    const price = await this.page.locator(productPageLocators.productPrices).allTextContents();
-    const buttonCount = await this.page.locator(productPageLocators.addToCartButtons).count();
+    await page.goto(BASE_URL);
+    await loginPage.login(USERNAME, PASSWORD);
+    await expect(page).toHaveURL("https://www.saucedemo.com/inventory.html");
+  });
 
-    if (names.length === 0)
-      throw new Error("No products found");
+  test("Validate Logout functionality", async ({ page }) => {
+    await productPage.logout();
+    await expect(page.locator(LoginLocators.loginButton)).toBeVisible();
+  });
 
-    if (
-      names.length !== descriptions.length ||
-      names.length !== price.length ||
-      names.length !== buttonCount
-    )
-      throw new Error("Mismatch between the product Details");
-  }
+  test("Validate About page and navigate back", async ({ page }) => {
+    await productPage.openAboutPage();
+    await expect(page.locator(productPageLocators.requestDemoButton)).toBeVisible();
+    await expect(page.locator(productPageLocators.tryifFreeButton)).toBeVisible();
+    await page.goBack();
+    await expect(page.locator(productPageLocators.settingIcon)).toBeVisible();
+  });
 
-  async addFirstProductToCart() {
-    await this.page.locator(productPageLocators.addToCartButtons).first().click();
-  }
+  test("Validate Product Page", async ({ page }) => {
+    await productPage.validateAllProductsDisplayed();
+    await productPage.addFirstProductToCart();
+    await productPage.addAllProductsToCart();
+  });
 
-  async addAllProductsToCart() {
-    const buttons = this.page.locator(productPageLocators.addToCartButtons);
-    const count = await buttons.count();
+  test("Validate adding specific products to cart", async ({ page }) => {
+    await productPage.addSpecificProductsToCart(productsToCart);
+  });
 
-    for (let i = 0; i < count; i++) {
-      await buttons.nth(i).click();
-      await this.page.waitForTimeout(3000);
-    }
-  }
+  test("Filter By Name A to Z", async ({ page }) => {
+    await productPage.filterByNameAtoZ();
+    const names = await productPage.getProductNames();
+    const sorted = [...names].sort();
+    expect(names).toEqual(sorted);
+  });
 
-  async addSpecificProductsToCart(productName: string[]) {
-    const addProducts = this.page.locator(productPageLocators.productNames);
-    const count = await addProducts.count();
+  test("Filter By Name Z to A", async ({ page }) => {
+    await productPage.filterByNameZtoA();
+    const names = await productPage.getProductNames();
+    const sorted = [...names].sort().reverse();
+    expect(names).toEqual(sorted);
+  });
 
-    for (let i = 0; i < count; i++) {
-      const name = await addProducts.nth(i).textContent();
-      if (name && productName.includes(name.trim())) {
-        await this.page.locator(productPageLocators.addToCartButtons).nth(i).click();
-        await this.page.waitForTimeout(3000);
-      }
-    }
-  }
+  test("Filter By Price Low to High", async ({ page }) => {
+    await productPage.filterByPriceLowToHigh();
+    const prices = await productPage.getProductPrices();
+    const sortedPrice = [...prices].sort((a, b) => a - b);
+    expect(prices).toEqual(sortedPrice);
+  });
 
-  async filterByNameAtoZ() {
-    await this.page.selectOption(productPageLocators.filterDropdown, "az");
-  }
-
-  async filterByNameZtoA() {
-    await this.page.selectOption(productPageLocators.filterDropdown, "za");
-    await this.page.waitForTimeout(3000);
-  }
-
-  async filterByPriceLowToHigh() {
-    await this.page.selectOption(productPageLocators.filterDropdown, "lohi");
-    await this.page.waitForTimeout(3000);
-  }
-
-  async filterByPriceHighToLow() {
-    await this.page.selectOption(productPageLocators.filterDropdown, "hilo");
-    await this.page.waitForTimeout(3000);
-  }
-
-  async getProductNames() {
-    return await this.page.locator(productPageLocators.productNames).allTextContents();
-  }
-
-  async getProductPrices() {
-    const prices = await this.page.locator(productPageLocators.productPrices).allTextContents();
-    return prices.map(price => parseFloat(price.replace('$', '')));
-  }
-}
+  test("Filter By Price High to Low", async ({ page }) => {
+    await productPage.filterByPriceHighToLow();
+    const prices = await productPage.getProductPrices();
+    const sortedPrice = [...prices].sort((a, b) => b - a);
+    expect(prices).toEqual(sortedPrice);
+  });
+});

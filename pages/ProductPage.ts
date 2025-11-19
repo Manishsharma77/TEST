@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { productPageLocators } from '../locators/ProductPageLocators';
-
+import { waitForTimeout } from '../utils/waitForTimeout';
 export class ProductPage {
   constructor(private page: Page) {}
 
