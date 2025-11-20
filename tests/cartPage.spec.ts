@@ -3,7 +3,7 @@ import { BASE_URL, USERNAME, PASSWORD } from '../utils/envConfig';
 import { ProductPage } from '../pages/ProductPage';
 import { LoginPage } from '../pages/LoginPage';
 import { CartPage } from '../pages/CartPage';
-import { productsToCart } from '../test-data/products';
+import { productsToCart } from '../test-data/productsToCart';
 
 test.describe('Cart Page Validation', () => {
   let loginPage: LoginPage;
@@ -39,10 +39,9 @@ test.describe('Cart Page Validation', () => {
   });
 
   test('Validate First Product in the Cart Page', async ({ page }) => {
-    const firstProduct = await productPage.getFirstProductDetails();
+    const firstProduct = await productPage.getProductDetails();
     await productPage.addFirstProductToCart();
     await productPage.clickOnCartLink();
-    await page.waitForTimeout(2000);
     const cartProducts = await cartPage.getCartProducts();
     expect(cartProducts[0]).toEqual(firstProduct);
   });
@@ -56,11 +55,11 @@ test.describe('Cart Page Validation', () => {
   });
 
   test('Validate Specific Products added to the Cart Page', async ({ page }) => {
-    const getSpecificProductDetails = await productPage.getSpecificProductDetails(productsToCart);
+    const specificProductDetails = await productPage.getSpecificProductDetails(productsToCart);
     await productPage.addSpecificProductsToCart(productsToCart);
     await productPage.clickOnCartLink();
     const cartProducts = await cartPage.getCartProducts();
-    expect(cartProducts).toEqual(getSpecificProductDetails);
+    expect(cartProducts).toEqual(specificProductDetails);
   });
 
   test.only('Validate Remove Product functionality', async ({ page }) => {

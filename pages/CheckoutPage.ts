@@ -13,16 +13,16 @@ export class CheckoutPage {
   }
 
   async fillCheckoutDetail(firstName: string, lastName: string, postalCode: string) {
-    await this.page.fill(CheckoutPageLocators.firstName, firstName);
-    await this.page.fill(CheckoutPageLocators.lastName, lastName);
-    await this.page.fill(CheckoutPageLocators.postalCode, postalCode);
+    await this.page.locator(CheckoutPageLocators.firstName).fill(firstName);
+    await this.page.locator(CheckoutPageLocators.lastName).fill(lastName);
+    await this.page.locator(CheckoutPageLocators.postalCode).fill(postalCode);
   }
 
   async clickCancel() {
-    await this.page.click(CheckoutPageLocators.cancelButton);
+    await this.page.locator(CheckoutPageLocators.cancelButton).click();
   }
 
   async clickOnContinue() {
-    await this.page.click(CheckoutPageLocators.continueButton);
+    await this.page.locator(CheckoutPageLocators.continueButton).click();
   }
 }
